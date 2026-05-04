@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | ForEach-Object { $p = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; \"PID $\\($_.OwningProcess\\) \\($\\($p.ProcessName\\)\\) is listening on 5000\" } } else { \"Port 5000 is free\" })",
+      "PowerShell(Stop-Process -Id 29812 -Force; Start-Sleep -Milliseconds 500; $conn = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { \"Still listening: PID $\\($conn.OwningProcess\\)\" } else { \"Port 5000 is free\" })"
+    ]
+  }
+}
