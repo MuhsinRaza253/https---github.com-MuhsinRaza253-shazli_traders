@@ -70,19 +70,29 @@ npm run dev   # Starts on http://localhost:3000
 2. Get test keys from Dashboard → Developers → API Keys
 3. Use `4242 4242 4242 4242` for testing card payments
 
-### Step 4 — Render (Backend Hosting)
-1. Push your code to GitHub
-2. Go to https://render.com → New Web Service
-3. Connect your GitHub repo → select `backend` folder
-4. Build command: `npm install`
-5. Start command: `node server.js`
-6. Add all env variables from `.env.example`
-7. Deploy! You'll get a URL like `https://islamic-caps-api.onrender.com`
+### Step 4 — Vercel (Backend Hosting, no credit card required)
 
+The backend is configured to run as a Vercel serverless function via `backend/vercel.json` and `backend/api/index.js`. The Express app exports itself; Vercel routes every request to it.
+
+1. Push your code to GitHub
+2. Go to https://vercel.com → **Add New Project** → import your repo (Hobby plan, no card required)
+3. **Root Directory:** `backend`
+4. **Framework Preset:** Other (Vercel auto-detects via `vercel.json`)
+5. Leave Build/Install commands as defaults
+6. **Environment Variables:** add every key from `backend/.env.example` with your real values (`MONGO_URI`, `JWT_SECRET`, `CLOUDINARY_*`, `STRIPE_*`, `FRONTEND_URL`)
+7. **Deploy.** You'll get a URL like `https://islamic-caps-api.vercel.app`
+
+> Notes on the Hobby tier:
+> - 10s function execution limit per request (fine for typical CRUD; long-running uploads/jobs aren't supported)
+> - Cold start delay (~1-2s) on the first request after a function has been idle
+> - The MongoDB connection is cached across warm invocations via the lazy-connect middleware in `server.js`
+w
 ### Step 5 — Vercel (Frontend Hosting)
 1. Go to https://vercel.com → Add New Project
 2. Connect your GitHub repo → select `frontend` folder
-3. Add env variable: `NEXT_PUBLIC_API_URL=https://your-render-url.onrender.com/api`
+3. Add env variable: `NEXT_PUBLIC_API_URL=https://your-backend-project.vercel.app/api`
+
+> Tip: this should be a **separate Vercel project** from your backend (different Root Directory: `frontend`). Same account, two projects.
 4. Deploy! You'll get a URL like `https://al-taqiyya.vercel.app`
 
 ---
