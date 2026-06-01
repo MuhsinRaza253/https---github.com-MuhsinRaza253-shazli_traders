@@ -6,7 +6,19 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+// CORS — allow the configured frontend URL(s) (comma-separated) plus any
+// *.vercel.app deployment. Falls back to allow-all if FRONTEND_URL is unset.
+const allowList = (process.env.FRONTEND_URL || '')
+  .split(',').map(s => s.trim().replace(/\/+$/, '')).filter(Boolean);
+app.use(cors({
+  origin(origin, cb) {
+    if (!origin) return cb(null, true); // server-to-server / curl / same-origin
+    const clean = origin.replace(/\/+$/, '');
+    if (allowList.length === 0 || allowList.includes(clean)) return cb(null, true);
+    try { if (/\.vercel\.app$/i.test(new URL(origin).hostname)) return cb(null, true); } catch {}
+    return cb(null, false);
+  },
+}));
 app.use(express.json());
 
 let dbPromise = null;
