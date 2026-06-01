@@ -2,6 +2,18 @@ const router = require('express').Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Order = require('../models/Order');
 const { protect } = require('../middleware/auth');
+const { upload } = require('../config/cloudinary');
+
+// POST /api/payment/proof — upload an advance-payment screenshot to Cloudinary.
+// Returns the hosted URL, which the client then attaches to the order.
+router.post('/proof', protect, upload.single('proof'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No screenshot uploaded' });
+    res.json({ url: req.file.path });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 // POST /api/payment/create-intent — create Stripe payment intent
 router.post('/create-intent', protect, async (req, res) => {

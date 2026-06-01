@@ -1,13 +1,19 @@
 const router = require('express').Router();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Settings = require('../models/Settings');
 const { protect, adminOnly } = require('../middleware/auth');
+const { sendOrderEmails } = require('../config/mailer');
 
 // POST /api/orders — place order (customer)
 router.post('/', protect, async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod, notes } = req.body;
+    const { orderItems, shippingAddress, paymentMethod, paymentProof, notes } = req.body;
     if (!orderItems?.length) return res.status(400).json({ message: 'No items in order' });
+
+    // Advance/online payment requires a payment screenshot
+    if (paymentMethod === 'online' && !paymentProof)
+      return res.status(400).json({ message: 'Payment screenshot is required for advance/online payment' });
 
     // Validate stock and calculate prices
     let itemsPrice = 0;
@@ -18,7 +24,11 @@ router.post('/', protect, async (req, res) => {
       itemsPrice += (product.salePrice || product.price) * item.quantity;
     }
 
-    const shippingPrice = itemsPrice >= 3000 ? 0 : 200; // Free shipping over PKR 3000
+    // Delivery charge is configured by the admin in store settings
+    const settings = await Settings.getSingleton();
+    const { deliveryCharge = 200, freeShippingThreshold = 3000 } = settings;
+    const qualifiesFree = freeShippingThreshold > 0 && itemsPrice >= freeShippingThreshold;
+    const shippingPrice = qualifiesFree ? 0 : deliveryCharge;
     const taxPrice = 0; // Can add GST later
     const totalPrice = itemsPrice + shippingPrice + taxPrice;
 
@@ -29,6 +39,7 @@ router.post('/', protect, async (req, res) => {
         price: item.price,
       })),
       shippingAddress, paymentMethod,
+      paymentProof: paymentProof || '',
       itemsPrice, shippingPrice, taxPrice, totalPrice,
       notes: notes || '',
     });
@@ -41,6 +52,10 @@ router.post('/', protect, async (req, res) => {
     }
 
     await order.populate('orderItems.product', 'name images');
+
+    // Notify the customer and the admin (never blocks/fails the order)
+    await sendOrderEmails(order, req.user);
+
     res.status(201).json(order);
   } catch (err) {
     res.status(500).json({ message: err.message });

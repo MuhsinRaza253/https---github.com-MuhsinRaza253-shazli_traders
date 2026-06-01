@@ -84,13 +84,19 @@ router.get('/orders', async (req, res) => {
 // PUT /api/admin/orders/:id — update order status
 router.put('/orders/:id', async (req, res) => {
   try {
-    const { status, trackingNumber } = req.body;
+    const { status, trackingNumber, isPaid } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     order.status = status || order.status;
     if (trackingNumber) order.trackingNumber = trackingNumber;
     if (status === 'delivered') order.deliveredAt = Date.now();
+
+    // Admin confirms an advance/online payment after checking the screenshot
+    if (isPaid !== undefined) {
+      order.isPaid = isPaid;
+      order.paidAt = isPaid ? Date.now() : null;
+    }
 
     await order.save();
     res.json(order);

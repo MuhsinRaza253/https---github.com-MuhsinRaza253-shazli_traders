@@ -6,6 +6,7 @@ const categorySchema = new mongoose.Schema({
   description: { type: String, default: '' },
   image:       { type: String, default: '' },
   isActive:    { type: Boolean, default: true },
+  showInNav:   { type: Boolean, default: true }, // show in the site header nav
   sortOrder:   { type: Number, default: 0 },
 }, { timestamps: true });
 

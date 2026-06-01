@@ -7,6 +7,8 @@ const orderItemSchema = new mongoose.Schema({
   price:    { type: Number, required: true },
   size:     { type: String, default: '' },
   color:    { type: String, default: '' },
+  // Full set of selected option groups (Size, Color, and any custom features)
+  attributes: [{ name: { type: String }, value: { type: String } }],
   quantity: { type: Number, required: true, min: 1 },
 });
 
@@ -24,9 +26,11 @@ const orderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['stripe', 'cod', 'jazzcash', 'easypaisa'],
+    enum: ['stripe', 'cod', 'jazzcash', 'easypaisa', 'online'],
     default: 'cod',
   },
+  // Screenshot/receipt the customer uploads when paying in advance (online)
+  paymentProof: { type: String, default: '' },
   paymentResult: {
     id:         String,
     status:     String,

@@ -1,5 +1,7 @@
 const router = require('express').Router();
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
+const Category = require('../models/Category');
 const { protect, adminOnly } = require('../middleware/auth');
 const { upload, cloudinary } = require('../config/cloudinary');
 
@@ -12,7 +14,17 @@ router.get('/', async (req, res) => {
     const { category, search, featured, minPrice, maxPrice, sort, page = 1, limit = 12 } = req.query;
     const query = { isActive: true };
 
-    if (category) query.category = category;
+    // Accept a category as either an ObjectId or a slug; ignore unknown values
+    // gracefully instead of throwing a CastError.
+    if (category) {
+      if (mongoose.isValidObjectId(category)) {
+        query.category = category;
+      } else {
+        const catDoc = await Category.findOne({ slug: category });
+        if (catDoc) query.category = catDoc._id;
+        else return res.json({ products: [], total: 0, page: Number(page), pages: 0 });
+      }
+    }
     if (featured === 'true') query.featured = true;
     if (search) query.$or = [
       { name: { $regex: search, $options: 'i' } },
@@ -58,10 +70,27 @@ router.get('/featured', async (req, res) => {
   }
 });
 
-// GET /api/products/:slug
+// GET /api/products/header — products to show in the homepage top carousel
+router.get('/header', async (req, res) => {
+  try {
+    const products = await Product.find({ isActive: true, onHeader: true })
+      .populate('category', 'name slug').limit(6).sort({ updatedAt: -1 });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/products/:slug — looks up by slug (public) or by id (admin edit).
+// An ObjectId is matched on _id without the isActive filter so admins can
+// open hidden/inactive products in the edit form.
 router.get('/:slug', async (req, res) => {
   try {
-    const product = await Product.findOne({ slug: req.params.slug, isActive: true })
+    const { slug } = req.params;
+    const filter = mongoose.isValidObjectId(slug)
+      ? { _id: slug }
+      : { slug, isActive: true };
+    const product = await Product.findOne(filter)
       .populate('category', 'name slug')
       .populate('reviews.user', 'name avatar');
     if (!product) return res.status(404).json({ message: 'Product not found' });
@@ -74,7 +103,7 @@ router.get('/:slug', async (req, res) => {
 // POST /api/products — admin only, with images
 router.post('/', protect, adminOnly, upload.array('images', 5), async (req, res) => {
   try {
-    const { name, description, price, salePrice, category, sizes, colors, material, stock, sku, tags, featured } = req.body;
+    const { name, description, price, salePrice, category, sizes, colors, material, stock, sku, tags, featured, onHeader } = req.body;
 
     const slug = toSlug(name);
     const existing = await Product.findOne({ slug });
@@ -89,9 +118,11 @@ router.post('/', protect, adminOnly, upload.array('images', 5), async (req, res)
       category, images,
       sizes: sizes ? JSON.parse(sizes) : [],
       colors: colors ? JSON.parse(colors) : [],
+      features: req.body.features ? JSON.parse(req.body.features) : [],
       material, stock: Number(stock) || 0, sku,
       tags: tags ? JSON.parse(tags) : [],
       featured: featured === 'true',
+      onHeader: onHeader === 'true',
     });
     await product.populate('category', 'name slug');
     res.status(201).json(product);
@@ -106,11 +137,12 @@ router.put('/:id', protect, adminOnly, upload.array('images', 5), async (req, re
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
-    const fields = ['name', 'description', 'price', 'salePrice', 'category', 'material', 'stock', 'sku', 'featured', 'isActive'];
+    const fields = ['name', 'description', 'price', 'salePrice', 'category', 'material', 'stock', 'sku', 'featured', 'onHeader', 'isActive'];
     fields.forEach(f => { if (req.body[f] !== undefined) product[f] = req.body[f]; });
 
     if (req.body.sizes) product.sizes = JSON.parse(req.body.sizes);
     if (req.body.colors) product.colors = JSON.parse(req.body.colors);
+    if (req.body.features) product.features = JSON.parse(req.body.features);
     if (req.body.tags) product.tags = JSON.parse(req.body.tags);
 
     // Add new images

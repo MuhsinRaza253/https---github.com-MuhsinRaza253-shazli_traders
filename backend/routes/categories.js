@@ -5,6 +5,10 @@ const { upload } = require('../config/cloudinary');
 
 const toSlug = str => str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
+// Normalise a category name to Title Case (e.g. "OMANI cap" -> "Omani Cap")
+const toTitleCase = str => str.trim().replace(/\s+/g, ' ').toLowerCase()
+  .replace(/\b\p{L}/gu, c => c.toUpperCase());
+
 // GET /api/categories
 router.get('/', async (req, res) => {
   try {
@@ -29,7 +33,8 @@ router.get('/:slug', async (req, res) => {
 // POST /api/categories — admin
 router.post('/', protect, adminOnly, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, sortOrder } = req.body;
+    const name = toTitleCase(req.body.name || '');
+    const { description, sortOrder, showInNav } = req.body;
     const slug = toSlug(name);
     if (await Category.findOne({ slug }))
       return res.status(400).json({ message: 'Category already exists' });
@@ -38,6 +43,7 @@ router.post('/', protect, adminOnly, upload.single('image'), async (req, res) =>
       name, slug, description,
       image: req.file?.path || '',
       sortOrder: sortOrder || 0,
+      showInNav: showInNav !== 'false' && showInNav !== false, // default true
     });
     res.status(201).json(cat);
   } catch (err) {
@@ -51,11 +57,12 @@ router.put('/:id', protect, adminOnly, upload.single('image'), async (req, res) 
     const cat = await Category.findById(req.params.id);
     if (!cat) return res.status(404).json({ message: 'Category not found' });
 
-    const { name, description, sortOrder, isActive } = req.body;
-    if (name) { cat.name = name; cat.slug = toSlug(name); }
+    const { name, description, sortOrder, isActive, showInNav } = req.body;
+    if (name) { cat.name = toTitleCase(name); cat.slug = toSlug(cat.name); }
     if (description !== undefined) cat.description = description;
     if (sortOrder !== undefined) cat.sortOrder = sortOrder;
     if (isActive !== undefined) cat.isActive = isActive;
+    if (showInNav !== undefined) cat.showInNav = (showInNav === 'true' || showInNav === true);
     if (req.file) cat.image = req.file.path;
 
     await cat.save();

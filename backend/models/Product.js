@@ -17,11 +17,14 @@ const productSchema = new mongoose.Schema({
   images:      [{ type: String }],           // Cloudinary URLs
   sizes:       [{ type: String }],           // e.g. ['S','M','L','XL','XXL','Free Size']
   colors:      [{ type: String }],           // e.g. ['White', 'Black', 'Green']
+  // Extra admin-defined option groups, e.g. { name: 'Fabric', options: ['Cotton','Wool'] }
+  features:    [{ name: { type: String }, options: [{ type: String }] }],
   material:    { type: String, default: '' },
   stock:       { type: Number, required: true, default: 0 },
   sku:         { type: String, default: '' },
   tags:        [{ type: String }],
   featured:    { type: Boolean, default: false },
+  onHeader:    { type: Boolean, default: false },  // show in homepage top carousel
   isActive:    { type: Boolean, default: true },
   reviews:     [reviewSchema],
   rating: {
