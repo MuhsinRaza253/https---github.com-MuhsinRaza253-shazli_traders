@@ -18,7 +18,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(form.name, form.email, form.password, form.phone);
-      toast.success('Account created! Welcome to Al-Taqiyya!');
+      toast.success('Account created! Welcome to Shazli Traders!');
       router.push('/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
@@ -30,11 +30,11 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Head><title>Register | Al-Taqiyya</title></Head>
+      <Head><title>Register | Shazli Traders</title></Head>
       <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: 'var(--emerald)', padding: '20px 24px' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 700, color: 'var(--white)' }}>Al-Taqiyya</span>
+            <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 700, color: 'var(--white)' }}>Shazli Traders</span>
           </Link>
         </div>
 
@@ -44,7 +44,7 @@ export default function RegisterPage() {
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
                 <div style={{ fontFamily: 'Amiri, serif', fontSize: '1.5rem', color: 'var(--gold)', marginBottom: 4 }}>إنشاء حساب</div>
                 <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2rem' }}>Create Account</h1>
-                <p style={{ color: 'var(--ink-lt)', fontSize: '0.9rem', marginTop: 4 }}>Join the Al-Taqiyya family</p>
+                <p style={{ color: 'var(--ink-lt)', fontSize: '0.9rem', marginTop: 4 }}>Join the Shazli Traders family</p>
               </div>
 
               <form onSubmit={handleSubmit}>

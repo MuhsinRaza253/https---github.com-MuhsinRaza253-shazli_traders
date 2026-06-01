@@ -9,6 +9,7 @@ const navItems = [
   { href: '/admin/categories', icon: '📂', label: 'Categories' },
   { href: '/admin/orders', icon: '📦', label: 'Orders' },
   { href: '/admin/customers', icon: '👥', label: 'Customers' },
+  { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
 ];
 
 export default function AdminLayout({ children, title }) {
@@ -36,7 +37,7 @@ export default function AdminLayout({ children, title }) {
         {/* Logo */}
         <div style={{ padding: '28px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           <div style={{ fontFamily: 'Amiri, serif', color: 'var(--gold)', fontSize: '1.1rem', marginBottom: 2 }}>لوحة التحكم</div>
-          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.3rem', fontWeight: 700, color: 'var(--white)' }}>Al-Taqiyya Admin</div>
+          <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.3rem', fontWeight: 700, color: 'var(--white)' }}>Shazli Traders Admin</div>
         </div>
 
         {/* Nav */}

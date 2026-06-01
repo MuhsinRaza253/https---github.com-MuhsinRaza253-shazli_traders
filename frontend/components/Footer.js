@@ -1,6 +1,15 @@
 import Link from 'next/link';
+import { useCart } from '../context/CartContext';
 
 export default function Footer() {
+  const { settings } = useCart();
+  const contact = {
+    address: settings?.contactAddress || 'Rawalpindi, Punjab, Pakistan',
+    phone: settings?.contactPhone || '+92 300 1234567',
+    email: settings?.contactEmail || 'info@altaqiyya.pk',
+    hours: settings?.contactHours || 'Mon–Sat: 9am – 6pm',
+    whatsapp: settings?.whatsappNumber || '923001234567',
+  };
   return (
     <footer style={{ background: 'var(--ink)', color: 'var(--cream-dk)', marginTop: 'auto' }}>
       {/* Main footer */}
@@ -9,10 +18,11 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <div style={{ fontFamily: 'Amiri, serif', fontSize: '1.4rem', color: 'var(--gold)', marginBottom: 4 }}>بيت الطاقية</div>
-            <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.8rem', fontWeight: 700, color: 'var(--white)', marginBottom: 16 }}>Al-Taqiyya</div>
+            <div style={{ display: 'inline-block', background: '#fbf7ee', padding: '16px 20px', borderRadius: 14, marginBottom: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}>
+              <img src="/logo.png" alt="Shazli Traders" style={{ height: 96, width: 'auto', display: 'block' }} />
+            </div>
             <p style={{ fontSize: '0.875rem', lineHeight: 1.7, color: '#a09880' }}>
-              Premium Islamic caps crafted with care and devotion. Serving the Muslim community with quality prayer caps since 2020.
+              Premium Islamic caps crafted with care and devotion. Serving the Muslim community with quality prayer caps from Gujranwala.
             </p>
             <div style={{ marginTop: 20, display: 'flex', gap: 12 }}>
               {['📱', '📘', '📸'].map((icon, i) => (
@@ -57,10 +67,10 @@ export default function Footer() {
           <div>
             <h4 style={{ color: 'var(--white)', fontFamily: 'Cormorant Garamond, serif', fontSize: '1.1rem', marginBottom: 16 }}>Contact</h4>
             {[
-              { icon: '📍', text: 'Rawalpindi, Punjab, Pakistan' },
-              { icon: '📞', text: '+92 300 1234567' },
-              { icon: '✉️', text: 'info@altaqiyya.pk' },
-              { icon: '⏰', text: 'Mon–Sat: 9am – 6pm' },
+              { icon: '📍', text: contact.address },
+              { icon: '📞', text: contact.phone },
+              { icon: '✉️', text: contact.email },
+              { icon: '⏰', text: contact.hours },
             ].map(({ icon, text }) => (
               <div key={text} style={{ display: 'flex', gap: 8, marginBottom: 10, fontSize: '0.875rem', color: '#a09880' }}>
                 <span>{icon}</span><span>{text}</span>
@@ -68,7 +78,7 @@ export default function Footer() {
             ))}
 
             {/* WhatsApp CTA */}
-            <a href="https://wa.me/923001234567" target="_blank" rel="noopener noreferrer"
+            <a href={`https://wa.me/${contact.whatsapp}`} target="_blank" rel="noopener noreferrer"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '10px 20px', background: '#25d366', color: '#fff', borderRadius: 'var(--radius)', fontWeight: 700, fontSize: '0.875rem', textDecoration: 'none' }}>
               💬 WhatsApp Us
             </a>
@@ -78,7 +88,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, maxWidth: 1200, margin: '0 auto', fontSize: '0.8rem', color: '#6b6050' }}>
-        <span>© {new Date().getFullYear()} Al-Taqiyya Islamic Caps. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} Shazli Traders. All rights reserved.</span>
         <span style={{ fontFamily: 'Amiri, serif', color: 'var(--gold)', fontSize: '1rem' }}>﷽</span>
       </div>
     </footer>

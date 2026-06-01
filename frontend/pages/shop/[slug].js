@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/Navbar';
@@ -13,18 +14,63 @@ export default function ProductDetail({ product }) {
   const { addItem } = useCart();
   const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
+  const [selected, setSelected] = useState({});     // { [featureName]: value }
   const [quantity, setQuantity] = useState(1);
+  const [perUnit, setPerUnit] = useState(false);     // pick options for each cap
+  const [variants, setVariants] = useState([]);      // [{ [featureName]: value }] per cap
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // All required option groups for this product: built-in Size/Color + custom features
+  const featureGroups = product ? [
+    ...(product.sizes?.length ? [{ name: 'Size', options: product.sizes }] : []),
+    ...(product.colors?.length ? [{ name: 'Color', options: product.colors }] : []),
+    ...((product.features || []).filter(f => f.name && f.options?.length).map(f => ({ name: f.name, options: f.options }))),
+  ] : [];
+  const hasOptions = featureGroups.length > 0;
+  const splitMode = perUnit && quantity > 1 && hasOptions;
+
+  // Keep the per-cap variant list sized to the quantity (new rows inherit current selections)
+  useEffect(() => {
+    setVariants(prev => {
+      const next = prev.slice(0, quantity);
+      while (next.length < quantity) next.push({ ...selected });
+      return next;
+    });
+  }, [quantity, selected]);
+
   if (!product) return <div style={{ textAlign: 'center', padding: 80 }}>Product not found.</div>;
 
+  const pick = (name, value) => setSelected(s => ({ ...s, [name]: value }));
+  const updateVariant = (idx, name, value) =>
+    setVariants(prev => prev.map((v, i) => (i === idx ? { ...v, [name]: value } : v)));
+  const toAttributes = sel => featureGroups.map(g => ({ name: g.name, value: sel[g.name] || '' }));
+  const missingIn = sel => featureGroups.filter(g => !sel[g.name]).map(g => g.name);
+
   const handleAddToCart = () => {
-    if (product.sizes?.length && !selectedSize) { toast.error('Please select a size'); return; }
-    addItem(product, quantity, selectedSize, selectedColor);
+    if (splitMode) {
+      for (const v of variants) {
+        const miss = missingIn(v);
+        if (miss.length) { toast.error(`Please choose ${miss.join(' & ')} for each cap`); return; }
+      }
+      // Merge identical option combos into single cart lines
+      const groups = {};
+      variants.forEach(v => {
+        const attrs = toAttributes(v);
+        const key = attrs.map(a => `${a.name}=${a.value}`).join('&');
+        if (!groups[key]) groups[key] = { attrs, qty: 0 };
+        groups[key].qty++;
+      });
+      Object.values(groups).forEach(g => addItem(product, g.qty, g.attrs));
+      const lines = Object.keys(groups).length;
+      toast.success(`${quantity} caps added (${lines} variant${lines > 1 ? 's' : ''})!`);
+      return;
+    }
+
+    const miss = missingIn(selected);
+    if (miss.length) { toast.error(`Please select ${miss.join(' & ')}`); return; }
+    addItem(product, quantity, toAttributes(selected));
     toast.success('Added to cart!');
   };
 
@@ -48,16 +94,20 @@ export default function ProductDetail({ product }) {
   return (
     <>
       <Head>
-        <title>{product.name} | Al-Taqiyya</title>
+        <title>{`${product.name} | Shazli Traders`}</title>
         <meta name="description" content={product.description?.slice(0, 160)} />
       </Head>
       <Navbar />
 
       <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
         {/* Breadcrumb */}
-        <div style={{ marginBottom: 24, fontSize: '0.85rem', color: 'var(--ink-lt)' }}>
-          <a href="/">Home</a> → <a href="/shop">Shop</a> → <span>{product.name}</span>
-        </div>
+        <nav className="breadcrumb" style={{ marginBottom: 24, fontSize: '0.85rem', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          <Link href="/">Home</Link>
+          <span className="sep">/</span>
+          <Link href="/shop">Shop</Link>
+          <span className="sep">/</span>
+          <span className="current">{product.name}</span>
+        </nav>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48 }} className="product-grid">
 
@@ -121,37 +171,27 @@ export default function ProductDetail({ product }) {
               )}
             </div>
 
-            {/* Sizes */}
-            {product.sizes?.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ fontWeight: 700, fontSize: '0.875rem', display: 'block', marginBottom: 8 }}>Size: <span style={{ color: 'var(--emerald)' }}>{selectedSize}</span></label>
+            {/* Option groups (Size, Color, custom features) — all required */}
+            {!splitMode && featureGroups.map(g => (
+              <div key={g.name} style={{ marginBottom: 20 }}>
+                <label style={{ fontWeight: 700, fontSize: '0.875rem', display: 'block', marginBottom: 8 }}>
+                  {g.name}: <span style={{ color: 'var(--emerald)' }}>{selected[g.name] || ''}</span>
+                  <span style={{ color: 'var(--red)' }}> *</span>
+                </label>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {product.sizes.map(s => (
-                    <button key={s} onClick={() => setSelectedSize(s)} style={{
-                      padding: '8px 16px', border: selectedSize === s ? '2px solid var(--emerald)' : '2px solid var(--cream-dk)',
-                      borderRadius: 'var(--radius)', background: selectedSize === s ? 'var(--emerald)' : 'transparent',
-                      color: selectedSize === s ? 'var(--white)' : 'var(--ink)', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
-                    }}>{s}</button>
-                  ))}
+                  {g.options.map(opt => {
+                    const on = selected[g.name] === opt;
+                    return (
+                      <button key={opt} onClick={() => pick(g.name, opt)} style={{
+                        padding: '8px 16px', border: on ? '2px solid var(--emerald)' : '2px solid var(--cream-dk)',
+                        borderRadius: 'var(--radius)', background: on ? 'var(--emerald)' : 'transparent',
+                        color: on ? 'var(--white)' : 'var(--ink)', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
+                      }}>{opt}</button>
+                    );
+                  })}
                 </div>
               </div>
-            )}
-
-            {/* Colors */}
-            {product.colors?.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ fontWeight: 700, fontSize: '0.875rem', display: 'block', marginBottom: 8 }}>Color: <span style={{ color: 'var(--emerald)' }}>{selectedColor}</span></label>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {product.colors.map(c => (
-                    <button key={c} onClick={() => setSelectedColor(c)} style={{
-                      padding: '8px 16px', border: selectedColor === c ? '2px solid var(--emerald)' : '2px solid var(--cream-dk)',
-                      borderRadius: 'var(--radius)', background: selectedColor === c ? 'rgba(26,92,58,0.1)' : 'transparent',
-                      color: 'var(--ink)', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem',
-                    }}>{c}</button>
-                  ))}
-                </div>
-              </div>
-            )}
+            ))}
 
             {/* Quantity */}
             <div style={{ marginBottom: 24 }}>
@@ -162,6 +202,44 @@ export default function ProductDetail({ product }) {
                 <button onClick={() => setQuantity(q => Math.min(product.stock, q + 1))} style={{ padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '1.2rem' }}>+</button>
               </div>
             </div>
+
+            {/* Per-cap size/color — only when ordering more than one of a product with options */}
+            {hasOptions && quantity > 1 && (
+              <div style={{ marginBottom: 24, background: 'var(--cream)', borderRadius: 'var(--radius)', padding: 16 }}>
+                <p style={{ fontWeight: 700, fontSize: '0.875rem', marginBottom: 10 }}>
+                  You're ordering {quantity} caps — should they all be the same?
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: splitMode ? 16 : 0 }}>
+                  {[
+                    { val: false, label: 'Same for all' },
+                    { val: true, label: 'Choose for each cap' },
+                  ].map(({ val, label }) => (
+                    <button key={label} onClick={() => setPerUnit(val)} style={{
+                      padding: '8px 16px', borderRadius: 'var(--radius)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+                      border: perUnit === val ? '2px solid var(--emerald)' : '2px solid var(--cream-dk)',
+                      background: perUnit === val ? 'var(--emerald)' : 'var(--white)',
+                      color: perUnit === val ? 'var(--white)' : 'var(--ink)',
+                    }}>{label}</button>
+                  ))}
+                </div>
+
+                {splitMode && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {variants.map((v, idx) => (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.8rem', minWidth: 54, color: 'var(--ink-mid)' }}>Cap {idx + 1}</span>
+                        {featureGroups.map(g => (
+                          <select key={g.name} className="form-input" value={v[g.name] || ''} onChange={e => updateVariant(idx, g.name, e.target.value)} style={{ flex: 1, minWidth: 110, padding: '8px 10px' }}>
+                            <option value="">{g.name}</option>
+                            {g.options.map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Add to Cart */}
             <div style={{ display: 'flex', gap: 12 }}>
@@ -231,7 +309,13 @@ export default function ProductDetail({ product }) {
       </div>
 
       <Footer />
-      <style jsx global>{`@media (max-width: 768px) { .product-grid { grid-template-columns: 1fr !important; } }`}</style>
+      <style jsx global>{`
+        @media (max-width: 768px) { .product-grid { grid-template-columns: 1fr !important; } }
+        .breadcrumb a { color: var(--ink-lt); text-decoration: none; font-weight: 600; transition: color 0.2s; }
+        .breadcrumb a:hover { color: var(--emerald); }
+        .breadcrumb .sep { color: var(--cream-dk); margin: 0 10px; }
+        .breadcrumb .current { color: var(--ink); font-weight: 700; }
+      `}</style>
     </>
   );
 }

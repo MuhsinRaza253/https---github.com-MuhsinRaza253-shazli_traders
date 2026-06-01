@@ -39,16 +39,18 @@ export default function AdminOrders() {
     setTrackingNum(order.trackingNumber || '');
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (extra = {}) => {
     setUpdating(true);
     try {
-      const { data } = await axios.put(`${API}/admin/orders/${selected._id}`, { status: newStatus, trackingNumber: trackingNum });
+      const { data } = await axios.put(`${API}/admin/orders/${selected._id}`, { status: newStatus, trackingNumber: trackingNum, ...extra });
       toast.success('Order updated!');
       setOrders(prev => prev.map(o => o._id === data._id ? data : o));
       setSelected(data);
     } catch {}
     setUpdating(false);
   };
+
+  const togglePaid = () => handleUpdate({ isPaid: !selected.isPaid });
 
   return (
     <>
@@ -147,7 +149,7 @@ export default function AdminOrders() {
                 <p style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 8 }}>Items</p>
                 {selected.orderItems?.map((item, i) => (
                   <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 6 }}>
-                    <span>{item.name} {item.size ? `(${item.size})` : ''} × {item.quantity}</span>
+                    <span>{item.name}{(() => { const a = (item.attributes?.length ? item.attributes.filter(x => x.value).map(x => x.value) : [item.size, item.color].filter(Boolean)); return a.length ? ` (${a.join(', ')})` : ''; })()} × {item.quantity}</span>
                     <span style={{ fontWeight: 600 }}>PKR {(item.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
@@ -155,6 +157,33 @@ export default function AdminOrders() {
                   <span>Total</span>
                   <span style={{ color: 'var(--emerald)' }}>PKR {selected.totalPrice?.toLocaleString()}</span>
                 </div>
+              </div>
+
+              {/* Payment */}
+              <div style={{ borderTop: '1px solid var(--cream-dk)', paddingTop: 16, marginBottom: 16 }}>
+                <p style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 8 }}>Payment</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 6 }}>
+                  <span style={{ color: 'var(--ink-lt)' }}>Method</span>
+                  <span style={{ fontWeight: 700 }}>{selected.paymentMethod === 'cod' ? 'Cash on Delivery' : selected.paymentMethod === 'online' ? 'Advance / Online' : selected.paymentMethod?.toUpperCase()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 10 }}>
+                  <span style={{ color: 'var(--ink-lt)' }}>Status</span>
+                  <span style={{ fontWeight: 700, color: selected.isPaid ? 'var(--emerald)' : 'var(--gold)' }}>{selected.isPaid ? '✓ Paid' : '⏳ Unpaid'}</span>
+                </div>
+
+                {selected.paymentProof && (
+                  <div style={{ marginBottom: 10 }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--ink-lt)', marginBottom: 6 }}>Payment screenshot</p>
+                    <a href={selected.paymentProof} target="_blank" rel="noopener noreferrer">
+                      <img src={selected.paymentProof} alt="Payment proof" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--cream-dk)' }} />
+                    </a>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--ink-lt)', marginTop: 4 }}>Click to open full size</p>
+                  </div>
+                )}
+
+                <button onClick={togglePaid} disabled={updating} className="btn btn-outline" style={{ width: '100%' }}>
+                  {selected.isPaid ? 'Mark as Unpaid' : '✓ Mark as Paid'}
+                </button>
               </div>
 
               {/* Update Status */}
@@ -170,7 +199,7 @@ export default function AdminOrders() {
                   <label className="form-label">Tracking Number</label>
                   <input className="form-input" placeholder="e.g. TCS-12345" value={trackingNum} onChange={e => setTrackingNum(e.target.value)} />
                 </div>
-                <button onClick={handleUpdate} disabled={updating} className="btn btn-primary" style={{ width: '100%' }}>
+                <button onClick={() => handleUpdate()} disabled={updating} className="btn btn-primary" style={{ width: '100%' }}>
                   {updating ? 'Updating...' : '✓ Update Order'}
                 </button>
               </div>

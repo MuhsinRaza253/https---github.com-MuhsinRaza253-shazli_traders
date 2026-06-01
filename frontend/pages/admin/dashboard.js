@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <Head><title>Admin Dashboard | Al-Taqiyya</title></Head>
+      <Head><title>Admin Dashboard | Shazli Traders</title></Head>
       <AdminLayout title="Dashboard">
 
         {/* Stats Cards */}

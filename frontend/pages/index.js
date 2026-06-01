@@ -5,10 +5,13 @@ import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
+import HeaderShowcase from '../components/HeaderShowcase';
+import { useCart } from '../context/CartContext';
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
+  const { freeShippingThreshold } = useCart();
   const [featured, setFeatured] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -20,65 +23,92 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Al-Taqiyya | Premium Islamic Caps & Prayer Hats</title>
+        <title>Shazli Traders | Premium Islamic Caps & Prayer Hats</title>
         <meta name="description" content="Discover authentic Islamic caps — Kufi, Sindhi Topi, Prayer Caps and more. Premium quality, shipped across Pakistan." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Navbar />
 
-      {/* HERO */}
-      <section style={{
-        minHeight: '88vh', display: 'flex', alignItems: 'center',
-        background: 'linear-gradient(135deg, var(--emerald) 0%, #0f3d25 60%, #0a2518 100%)',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        {/* Geometric pattern overlay */}
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.07,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-rule='evenodd'%3E%3Cpath d='M40 0l10 20h20L55 33l7.7 23.7L40 44 17.3 56.7 25 33 10 20h20z'/%3E%3C/g%3E%3C/svg%3E")`,
-        }}/>
-
-        {/* Gold accent circle */}
-        <div style={{
-          position: 'absolute', right: '-10%', top: '50%', transform: 'translateY(-50%)',
-          width: '55vw', height: '55vw', maxWidth: 700,
-          borderRadius: '50%', border: '2px solid rgba(200,151,42,0.2)',
-          boxShadow: '0 0 0 60px rgba(200,151,42,0.03)',
-        }}/>
-
-        <div className="container" style={{ position: 'relative', zIndex: 1, padding: '80px 24px', maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ maxWidth: 580 }}>
-            <div style={{ fontFamily: 'Amiri, serif', fontSize: '2rem', color: 'var(--gold)', marginBottom: 8, letterSpacing: '0.1em' }}>
-              بسم الله الرحمن الرحيم
-            </div>
-            <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: 12, letterSpacing: '0.15em', textTransform: 'uppercase', fontSize: '0.85rem', fontWeight: 700 }}>
-              Premium Islamic Headwear
-            </p>
-            <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2.8rem, 6vw, 5rem)', fontWeight: 700, color: 'var(--white)', lineHeight: 1.05, marginBottom: 24 }}>
-              Crafted with <span style={{ color: 'var(--gold-lt)' }}>Faith &</span><br/>Tradition
-            </h1>
-            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.05rem', lineHeight: 1.7, marginBottom: 40, maxWidth: 460 }}>
-              Discover our curated collection of authentic Islamic caps — from classic Kufi to intricate embroidered Topi. Quality that honours your prayer.
-            </p>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <Link href="/shop" className="btn btn-gold btn-lg">Shop Now</Link>
-              <Link href="/shop?featured=true" className="btn btn-lg" style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--white)', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(8px)' }}>
-                View Featured
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div style={{ display: 'flex', gap: 40, marginTop: 56, flexWrap: 'wrap' }}>
-              {[['500+', 'Happy Customers'], ['50+', 'Cap Styles'], ['4.9★', 'Average Rating']].map(([val, label]) => (
-                <div key={label}>
-                  <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.8rem', fontWeight: 700, color: 'var(--gold-lt)' }}>{val}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, letterSpacing: '0.05em' }}>{label}</div>
-                </div>
-              ))}
-            </div>
+      {/* HERO — branded banner */}
+      <section className="hero">
+        <div className="hero-bg" />
+        <div className="hero-scrim" />
+        <div className="hero-content">
+          <div className="hero-bismillah">بسم الله الرحمن الرحيم</div>
+          <div className="hero-cta">
+            <Link href="/shop" className="btn btn-gold btn-lg">Shop Now</Link>
+            <Link href="/shop?featured=true" className="btn btn-lg" style={{ background: 'rgba(255,255,255,0.14)', color: '#ffffff', border: '1.5px solid var(--gold-lt)', backdropFilter: 'blur(8px)', fontWeight: 700 }}>View Featured</Link>
           </div>
         </div>
       </section>
+
+      {/* STATS STRIP */}
+      <section style={{ background: 'var(--emerald)', padding: '26px 24px' }}>
+        <div className="container" style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', justifyContent: 'space-around', gap: 24, flexWrap: 'wrap', textAlign: 'center' }}>
+          {[['500+', 'Happy Customers'], ['50+', 'Cap Styles'], ['4.9★', 'Average Rating'], ['Gujranwala', 'Best Wholesale Rates']].map(([val, label]) => (
+            <div key={label}>
+              <div style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 700, color: 'var(--gold-lt)' }}>{val}</div>
+              <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* TOP PICKS — products with onHeader enabled */}
+      <HeaderShowcase />
+
+      <style jsx>{`
+        .hero {
+          position: relative;
+          width: 100%;
+          height: clamp(360px, 52vw, 640px);
+          overflow: hidden;
+          background: #0a1733;
+        }
+        .hero-bg {
+          position: absolute;
+          inset: 0;
+          background: url('/hero-banner.jpg') center center / cover no-repeat;
+          transform: scale(1.02);
+          animation: heroZoom 20s ease-in-out infinite alternate;
+        }
+        .hero-scrim {
+          position: absolute;
+          inset: 0;
+          background:
+            linear-gradient(to top, rgba(8,18,40,0.92) 0%, rgba(8,18,40,0.35) 30%, rgba(8,18,40,0) 55%),
+            radial-gradient(120% 80% at 50% 120%, rgba(200,151,42,0.18) 0%, rgba(200,151,42,0) 60%);
+        }
+        .hero-content {
+          position: absolute;
+          left: 0; right: 0; bottom: clamp(20px, 4vw, 52px);
+          z-index: 2;
+          display: flex; flex-direction: column; align-items: center; gap: 18px;
+          padding: 0 16px;
+          animation: heroRise 0.9s ease-out both;
+        }
+        .hero-bismillah {
+          font-family: 'Amiri', serif;
+          color: var(--gold-lt);
+          font-size: clamp(1.1rem, 2.6vw, 1.9rem);
+          letter-spacing: 0.04em;
+          text-shadow: 0 2px 16px rgba(0,0,0,0.65);
+        }
+        .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+        .hero-ghost {
+          background: rgba(255,255,255,0.12);
+          color: #fff;
+          border: 1px solid rgba(255,255,255,0.5);
+          backdrop-filter: blur(8px);
+        }
+        .hero-ghost:hover { background: rgba(255,255,255,0.22); }
+        @keyframes heroZoom { from { transform: scale(1.02); } to { transform: scale(1.1); } }
+        @keyframes heroRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-bg { animation: none; }
+          .hero-content { animation: none; }
+        }
+      `}</style>
 
       {/* CATEGORIES */}
       <section className="section" style={{ background: 'var(--cream)' }}>
@@ -158,12 +188,12 @@ export default function Home() {
       <section className="section pattern-bg">
         <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
-            <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--white)' }}>Why Choose Al-Taqiyya?</h2>
+            <h2 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: 'clamp(2rem, 4vw, 3rem)', color: 'var(--white)' }}>Why Choose Shazli Traders?</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 32 }}>
             {[
               { icon: '🌟', title: 'Premium Quality', desc: 'Hand-selected materials sourced from trusted weavers' },
-              { icon: '🚚', title: 'Fast Delivery', desc: 'Free shipping across Pakistan on orders over PKR 3,000' },
+              { icon: '🚚', title: 'Fast Delivery', desc: freeShippingThreshold > 0 ? `Free shipping across Pakistan on orders over PKR ${freeShippingThreshold.toLocaleString()}` : 'Reliable delivery across Pakistan' },
               { icon: '↩️', title: 'Easy Returns', desc: '7-day hassle-free return policy' },
               { icon: '💬', title: '24/7 Support', desc: 'WhatsApp support for all your questions' },
             ].map(({ icon, title, desc }) => (

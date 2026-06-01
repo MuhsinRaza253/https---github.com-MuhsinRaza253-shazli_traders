@@ -12,7 +12,7 @@ export default function AdminCategories() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', sortOrder: 0 });
+  const [form, setForm] = useState({ name: '', description: '', sortOrder: 0, showInNav: true });
   const [imageFile, setImageFile] = useState(null);
 
   const load = () => {
@@ -23,7 +23,7 @@ export default function AdminCategories() {
 
   const openEdit = (cat) => {
     setEditing(cat);
-    setForm({ name: cat.name, description: cat.description || '', sortOrder: cat.sortOrder || 0 });
+    setForm({ name: cat.name, description: cat.description || '', sortOrder: cat.sortOrder || 0, showInNav: cat.showInNav !== false });
     setShowForm(true);
   };
 
@@ -43,7 +43,7 @@ export default function AdminCategories() {
         await axios.post(`${API}/categories`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Category created!');
       }
-      setShowForm(false); setEditing(null); setForm({ name: '', description: '', sortOrder: 0 }); setImageFile(null);
+      setShowForm(false); setEditing(null); setForm({ name: '', description: '', sortOrder: 0, showInNav: true }); setImageFile(null);
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Error saving');
@@ -66,7 +66,7 @@ export default function AdminCategories() {
       <AdminLayout title="Categories">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
           <span style={{ color: 'var(--ink-lt)', fontSize: '0.875rem' }}>{categories.length} categories</span>
-          <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ name: '', description: '', sortOrder: 0 }); }} className="btn btn-primary">
+          <button onClick={() => { setShowForm(!showForm); setEditing(null); setForm({ name: '', description: '', sortOrder: 0, showInNav: true }); }} className="btn btn-primary">
             {showForm ? 'Cancel' : '+ Add Category'}
           </button>
         </div>
@@ -94,6 +94,14 @@ export default function AdminCategories() {
                 <label className="form-label">Category Image</label>
                 <input type="file" accept="image/*" onChange={e => setImageFile(e.target.files[0])} style={{ padding: '10px 0' }} />
               </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer' }}>
+                <input type="checkbox" checked={form.showInNav} onChange={e => setForm(f => ({ ...f, showInNav: e.target.checked }))}
+                  style={{ width: 18, height: 18, accentColor: 'var(--emerald)', cursor: 'pointer' }} />
+                <span>
+                  <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>🧭 Show in navigation bar</span>
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--ink-lt)' }}>Display this category as a link in the site header menu</span>
+                </span>
+              </label>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button type="submit" disabled={saving} className="btn btn-primary">{saving ? 'Saving...' : (editing ? 'Update' : 'Create')}</button>
                 <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} className="btn btn-outline">Cancel</button>
@@ -121,7 +129,10 @@ export default function AdminCategories() {
                       <h3 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.1rem' }}>{cat.name}</h3>
                       {cat.description && <p style={{ fontSize: '0.8rem', color: 'var(--ink-lt)', marginTop: 4 }}>{cat.description}</p>}
                     </div>
-                    <span className={`badge ${cat.isActive ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>{cat.isActive ? 'Active' : 'Off'}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+                      <span className={`badge ${cat.isActive ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>{cat.isActive ? 'Active' : 'Off'}</span>
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: cat.showInNav !== false ? 'var(--emerald)' : 'var(--ink-lt)' }}>{cat.showInNav !== false ? '🧭 In nav' : 'Hidden from nav'}</span>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                     <button onClick={() => openEdit(cat)} style={{ flex: 1, padding: '8px', background: 'var(--emerald)', color: 'var(--white)', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}>Edit</button>

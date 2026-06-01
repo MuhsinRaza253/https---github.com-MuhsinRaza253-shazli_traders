@@ -69,7 +69,7 @@ export default function ShopPage() {
   return (
     <>
       <Head>
-        <title>Shop Islamic Caps | Al-Taqiyya</title>
+        <title>Shop Islamic Caps | Shazli Traders</title>
       </Head>
       <Navbar />
 

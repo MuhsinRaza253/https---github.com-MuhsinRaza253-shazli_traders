@@ -5,11 +5,11 @@ import Footer from '../components/Footer';
 import { useCart } from '../context/CartContext';
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, subtotal, shipping, total } = useCart();
+  const { items, removeItem, updateQty, subtotal, shipping, total, freeShippingThreshold } = useCart();
 
   return (
     <>
-      <Head><title>Cart | Al-Taqiyya</title></Head>
+      <Head><title>Cart | Shazli Traders</title></Head>
       <Navbar />
       <div className="container" style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 24px' }}>
         <h1 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '2.5rem', marginBottom: 32 }}>Shopping Cart</h1>
@@ -36,8 +36,10 @@ export default function CartPage() {
 
                   <div style={{ flex: 1 }}>
                     <Link href={`/shop/${item.slug}`} style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.2rem', fontWeight: 600, color: 'var(--ink)', textDecoration: 'none' }}>{item.name}</Link>
-                    {item.size && <p style={{ color: 'var(--ink-lt)', fontSize: '0.85rem' }}>Size: {item.size}</p>}
-                    {item.color && <p style={{ color: 'var(--ink-lt)', fontSize: '0.85rem' }}>Color: {item.color}</p>}
+                    {(item.attributes?.length
+                      ? item.attributes.filter(a => a.value)
+                      : [item.size && { name: 'Size', value: item.size }, item.color && { name: 'Color', value: item.color }].filter(Boolean)
+                    ).map(a => <p key={a.name} style={{ color: 'var(--ink-lt)', fontSize: '0.85rem' }}>{a.name}: {a.value}</p>)}
                     <div style={{ fontWeight: 700, color: 'var(--emerald)', marginTop: 4 }}>PKR {(item.salePrice || item.price).toLocaleString()}</div>
                   </div>
 
@@ -66,7 +68,7 @@ export default function CartPage() {
                   <span style={{ fontWeight: 600, color: value === 'FREE 🎉' ? 'var(--emerald)' : 'var(--ink)' }}>{value}</span>
                 </div>
               ))}
-              {shipping > 0 && <p style={{ fontSize: '0.8rem', color: 'var(--ink-lt)', marginBottom: 12 }}>Free shipping on orders over PKR 3,000</p>}
+              {shipping > 0 && freeShippingThreshold > 0 && <p style={{ fontSize: '0.8rem', color: 'var(--ink-lt)', marginBottom: 12 }}>Free shipping on orders over PKR {freeShippingThreshold.toLocaleString()}</p>}
               <div style={{ borderTop: '2px solid var(--cream-dk)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem', marginBottom: 20 }}>
                 <span>Total</span>
                 <span style={{ color: 'var(--emerald)' }}>PKR {total.toLocaleString()}</span>

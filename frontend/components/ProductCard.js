@@ -1,16 +1,23 @@
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { useCart } from '../context/CartContext';
 import toast from 'react-hot-toast';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
+  const router = useRouter();
   const [hovered, setHovered] = useState(false);
   const [added, setAdded] = useState(false);
 
+  // Products with selectable options can't be quick-added — send to the page to choose
+  const hasOptions = product.sizes?.length > 0 || product.colors?.length > 0 ||
+    (product.features || []).some(f => f.options?.length > 0);
+
   const handleAddToCart = (e) => {
     e.preventDefault();
-    addItem(product, 1);
+    if (hasOptions) { router.push(`/shop/${product.slug}`); return; }
+    addItem(product, 1, []);
     setAdded(true);
     toast.success(`${product.name} added to cart!`);
     setTimeout(() => setAdded(false), 2000);
@@ -64,7 +71,7 @@ export default function ProductCard({ product }) {
               transition: 'all 0.25s ease', fontFamily: 'inherit',
             }}
           >
-            {added ? '✓ Added!' : product.stock === 0 ? 'Out of Stock' : '+ Add to Cart'}
+            {added ? '✓ Added!' : product.stock === 0 ? 'Out of Stock' : hasOptions ? 'Select Options' : '+ Add to Cart'}
           </button>
         </div>
 

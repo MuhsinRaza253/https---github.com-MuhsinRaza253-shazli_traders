@@ -26,13 +26,13 @@ export default function LoginPage() {
 
   return (
     <>
-      <Head><title>Login | Al-Taqiyya</title></Head>
+      <Head><title>Login | Shazli Traders</title></Head>
       <div style={{ minHeight: '100vh', background: 'var(--cream)', display: 'flex', flexDirection: 'column' }}>
 
         {/* Header */}
         <div style={{ background: 'var(--emerald)', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
-            <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 700, color: 'var(--white)' }}>Al-Taqiyya</span>
+            <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 700, color: 'var(--white)' }}>Shazli Traders</span>
           </Link>
         </div>
 

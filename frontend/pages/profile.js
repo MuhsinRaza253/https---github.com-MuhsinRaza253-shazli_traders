@@ -48,7 +48,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Head><title>My Profile | Al-Taqiyya</title></Head>
+      <Head><title>My Profile | Shazli Traders</title></Head>
       <Navbar />
 
       <div style={{ background: 'var(--emerald)', padding: '40px 24px', textAlign: 'center' }}>

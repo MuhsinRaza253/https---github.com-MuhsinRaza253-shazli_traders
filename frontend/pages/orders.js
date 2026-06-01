@@ -45,7 +45,7 @@ export default function OrdersPage() {
 
   return (
     <>
-      <Head><title>My Orders | Al-Taqiyya</title></Head>
+      <Head><title>My Orders | Shazli Traders</title></Head>
       <Navbar />
 
       <div style={{ background: 'var(--emerald)', padding: '40px 24px', textAlign: 'center' }}>
@@ -99,7 +99,8 @@ export default function OrdersPage() {
                         {item.image ? <img src={item.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🎩</div>}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.8rem', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: '0.8rem', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                        {(() => { const a = (item.attributes?.length ? item.attributes.filter(x => x.value).map(x => x.value) : [item.size, item.color].filter(Boolean)); return a.length ? <div style={{ fontSize: '0.7rem', color: 'var(--ink-lt)' }}>{a.join(', ')}</div> : null; })()}
                         <div style={{ fontSize: '0.75rem', color: 'var(--ink-lt)' }}>×{item.quantity}</div>
                       </div>
                     </div>
@@ -124,10 +125,18 @@ export default function OrdersPage() {
                       </div>
                       <div>
                         <h4 style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1rem', marginBottom: 8 }}>Payment</h4>
-                        <p style={{ fontSize: '0.875rem', color: 'var(--ink-mid)' }}>Method: {order.paymentMethod?.toUpperCase()}</p>
+                        <p style={{ fontSize: '0.875rem', color: 'var(--ink-mid)' }}>Method: {order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod === 'online' ? 'Advance / Online' : order.paymentMethod?.toUpperCase()}</p>
                         <p style={{ fontSize: '0.875rem', color: order.isPaid ? 'var(--emerald)' : 'var(--gold)', fontWeight: 700 }}>
                           {order.isPaid ? '✓ Paid' : '⏳ Payment Pending'}
                         </p>
+                        {order.paymentProof && (
+                          <div style={{ marginTop: 8 }}>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--ink-lt)', marginBottom: 4 }}>Payment screenshot:</p>
+                            <a href={order.paymentProof} target="_blank" rel="noopener noreferrer">
+                              <img src={order.paymentProof} alt="Payment proof" style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--cream-dk)' }} />
+                            </a>
+                          </div>
+                        )}
                         {order.trackingNumber && (
                           <p style={{ fontSize: '0.875rem', marginTop: 8 }}>📦 Tracking: <strong>{order.trackingNumber}</strong></p>
                         )}

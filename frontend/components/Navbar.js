@@ -1,16 +1,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
-  const { totalItems } = useCart();
+  const { totalItems, freeShippingThreshold } = useCart();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+
+  // Show the admin's real categories in the nav (links by id so filtering works)
+  useEffect(() => {
+    axios.get(`${API}/categories`).then(r => setCategories(r.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -32,15 +41,14 @@ export default function Navbar() {
       }}>
         {/* Top bar */}
         <div style={{ background: 'var(--emerald)', color: 'var(--cream)', textAlign: 'center', padding: '8px', fontSize: '0.8rem', letterSpacing: '0.05em' }}>
-          Free shipping on orders over PKR 3,000 &nbsp;|&nbsp; <span style={{ fontFamily: 'Amiri, serif' }}>بسم الله الرحمن الرحيم</span>
+          {freeShippingThreshold > 0 ? `Free shipping on orders over PKR ${freeShippingThreshold.toLocaleString()}` : 'Premium Islamic headwear, shipped across Pakistan'} &nbsp;|&nbsp; <span style={{ fontFamily: 'Amiri, serif' }}>بسم الله الرحمن الرحيم</span>
         </div>
 
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', maxWidth: 1200, margin: '0 auto' }}>
 
           {/* Logo */}
-          <Link href="/" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span style={{ fontFamily: 'Amiri, serif', fontSize: '1.1rem', color: 'var(--gold)', letterSpacing: '0.1em' }}>بيت الطاقية</span>
-            <span style={{ fontFamily: 'Cormorant Garamond, serif', fontSize: '1.5rem', fontWeight: 700, color: 'var(--emerald)', letterSpacing: '0.02em' }}>Al-Taqiyya</span>
+          <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <img src="/logo.png" alt="Shazli Traders" className="brand-logo" />
           </Link>
 
           {/* Desktop Nav */}
@@ -48,8 +56,7 @@ export default function Navbar() {
             {[
               { href: '/', label: 'Home' },
               { href: '/shop', label: 'Shop' },
-              { href: '/shop?category=kufi', label: 'Kufi Caps' },
-              { href: '/shop?category=prayer', label: 'Prayer Caps' },
+              ...categories.filter(c => c.showInNav !== false).slice(0, 4).map(c => ({ href: `/shop?category=${c._id}`, label: c.name })),
               { href: '/shop?featured=true', label: 'Featured' },
             ].map(({ href, label }) => (
               <Link key={href} href={href} style={{
@@ -138,8 +145,7 @@ export default function Navbar() {
             {[
               { href: '/', label: 'Home' },
               { href: '/shop', label: 'Shop All' },
-              { href: '/shop?category=kufi', label: 'Kufi Caps' },
-              { href: '/shop?category=prayer', label: 'Prayer Caps' },
+              ...categories.filter(c => c.showInNav !== false).slice(0, 6).map(c => ({ href: `/shop?category=${c._id}`, label: c.name })),
               { href: '/cart', label: `Cart (${totalItems})` },
               { href: '/orders', label: 'My Orders' },
             ].map(({ href, label }) => (
@@ -152,7 +158,16 @@ export default function Navbar() {
         )}
       </nav>
       <div style={{ height: 96 }} />
-      <style jsx global>{`.desktop-nav { display: flex; } .mobile-only { display: none; } @media (max-width: 768px) { .desktop-nav { display: none !important; } .mobile-only { display: flex !important; } }`}</style>
+      <style jsx global>{`
+        .brand-logo { height: 60px; width: auto; }
+        .desktop-nav { display: flex; }
+        .mobile-only { display: none; }
+        @media (max-width: 768px) {
+          .brand-logo { height: 46px; }
+          .desktop-nav { display: none !important; }
+          .mobile-only { display: flex !important; }
+        }
+      `}</style>
     </>
   );
 }
